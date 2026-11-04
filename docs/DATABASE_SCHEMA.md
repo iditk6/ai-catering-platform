@@ -2,6 +2,8 @@
 
 Status: **Draft v0.1** — not yet migrated. First migration is planned for Phase 2.
 
+Visual ERD (proposal for a SQLite variant, with the extra tables and key-to-key links): open [`DATABASE_ERD.html`](DATABASE_ERD.html) in a browser.
+
 Conventions **[RECOMMENDATION]**: `uuid` PKs (`gen_random_uuid()`), `timestamptz` `created_at`/`updated_at`, money as `numeric(10,2)`, enums as Postgres enum types, snake_case, RLS enabled on every table.
 
 ## Enums
