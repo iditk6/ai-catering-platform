@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="he">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>תרשים ER של yumm.ai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&family=Playpen+Sans+Hebrew:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: short header and toolbar, then a full-width scrollable canvas: absolutely placed table boxes over an SVG layer of key-to-key links. */
+:root {
+  --bg: #fff9ed;
+  --canvas: #fbf4e3;
+  --dot: #e6dcc4;
+  --surface: #ffffff;
+  --line: #e6dcc4;
+  --border: #7a7260;
+  --text: #202020;
+  --muted: #5a554a;
+  --accent: #3f702b;
+  --link: #9a9380;
+  --hot: #c2321f;
+  --pk: #3f702b;
+  --pk-soft: #eaf3dc;
+  --fk: #1f5f8b;
+  --fk-soft: #e2eef7;
+  --new: #8a5a00;
+  --new-soft: #fff1c2;
+  --d-people: #f6e3c8;  --d-people-ink: #7a4a12;
+  --d-catalog: #e4f1d0;  --d-catalog-ink: #2b5f1a;
+  --d-ops: #ece6f6;     --d-ops-ink: #4e3a7a;
+  --d-orders: #fde6e1;  --d-orders-ink: #9a2a18;
+  --d-ai: #dff0f2;      --d-ai-ink: #1d5c63;
+  --font: "Heebo", system-ui, "Segoe UI", Arial, sans-serif;
+  --font-display: "Playpen Sans Hebrew", "Heebo", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1b1c17; --canvas: #202119; --dot: #34362c; --surface: #2a2c23; --line: #3d4033; --border: #8b8676;
+    --text: #f2eee3; --muted: #b9b3a3; --accent: #9fd16a; --link: #77725f; --hot: #ff8a70;
+    --pk: #9fd16a; --pk-soft: #2c3a20; --fk: #8cc4ec; --fk-soft: #1d3140; --new: #ffd65a; --new-soft: #3d3418;
+    --d-people: #3b2f1e; --d-people-ink: #f3c98a; --d-catalog: #263a1c; --d-catalog-ink: #b7e08a;
+    --d-ops: #2f2a3d; --d-ops-ink: #c9b8f0; --d-orders: #40231e; --d-orders-ink: #ffb3a3;
+    --d-ai: #1c3437; --d-ai-ink: #9ad8df;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1b1c17; --canvas: #202119; --dot: #34362c; --surface: #2a2c23; --line: #3d4033; --border: #8b8676;
+  --text: #f2eee3; --muted: #b9b3a3; --accent: #9fd16a; --link: #77725f; --hot: #ff8a70;
+  --pk: #9fd16a; --pk-soft: #2c3a20; --fk: #8cc4ec; --fk-soft: #1d3140; --new: #ffd65a; --new-soft: #3d3418;
+  --d-people: #3b2f1e; --d-people-ink: #f3c98a; --d-catalog: #263a1c; --d-catalog-ink: #b7e08a;
+  --d-ops: #2f2a3d; --d-ops-ink: #c9b8f0; --d-orders: #40231e; --d-orders-ink: #ffb3a3;
+  --d-ai: #1c3437; --d-ai-ink: #9ad8df;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.5; }
+.gutter {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.top { padding-block: 24px 14px; display: grid; gap: 12px; max-width: 1400px; margin: 0 auto; }
+h1 { font-family: var(--font-display); font-size: clamp(1.6rem, 3.6vw, 2.3rem); margin: 0; line-height: 1.2; text-wrap: balance; }
+.lead { margin: 0; color: var(--muted); max-width: 72ch; }
+code { font-family: var(--font-mono); font-size: 0.86em; }
+
+.bar { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; justify-content: space-between; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.84rem; color: var(--muted); align-items: center; }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.legend svg { overflow: visible; }
+.tools { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.tools button {
+  font: inherit; font-size: 0.88rem; background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 999px; padding: 4px 14px; cursor: pointer; min-height: 34px;
+}
+.tools button:hover { background: var(--pk-soft); }
+.tools button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.zoom-val { font-variant-numeric: tabular-nums; font-family: var(--font-mono); font-size: 0.82rem; color: var(--muted); min-width: 4ch; text-align: center; }
+.status { font-size: 0.88rem; color: var(--muted); min-height: 1.5em; }
+.status b { color: var(--text); font-family: var(--font-mono); font-weight: 600; }
+
+.badge { font-family: var(--font-mono); font-size: 0.64rem; font-weight: 600; padding: 0 5px; border-radius: 4px; line-height: 16px; }
+.b-pk { background: var(--pk-soft); color: var(--pk); }
+.b-fk { background: var(--fk-soft); color: var(--fk); }
+.b-new { background: var(--new-soft); color: var(--new); font-family: var(--font); }
+
+.viewport-wrap { padding-block: 0 32px; }
+.viewport {
+  direction: ltr; position: relative; overflow: auto; height: min(80vh, 980px); min-height: 420px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background-color: var(--canvas);
+  background-image: radial-gradient(var(--dot) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+}
+.sizer { position: relative; }
+.stage { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+svg.links { position: absolute; top: 0; left: 0; overflow: visible; pointer-events: none; }
+.link { fill: none; stroke: var(--link); stroke-width: 1.6; transition: stroke .12s, opacity .12s; }
+.mark { fill: none; stroke: var(--link); stroke-width: 1.6; }
+.lg.hot .link, .lg.hot .mark { stroke: var(--hot); stroke-width: 2.4; }
+.dim .lg:not(.hot) { opacity: 0.15; }
+
+.box {
+  position: absolute; width: 280px; background: var(--surface); border-radius: 10px;
+  box-shadow: 0 0 0 1.5px var(--border), 0 2px 0 1.5px var(--line);
+  font-family: var(--font-mono); font-size: 12.5px; transition: opacity .12s;
+}
+.box.is-new { box-shadow: 0 0 0 1.5px var(--new), 0 2px 0 1.5px var(--line); }
+.dim .box:not(.sel):not(.rel) { opacity: 0.35; }
+.box.sel { box-shadow: 0 0 0 2.5px var(--hot), 0 6px 18px rgba(0,0,0,.12); }
+.box.rel { box-shadow: 0 0 0 2px var(--fk), 0 2px 0 1.5px var(--line); }
+.box-head {
+  height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 0 12px; border-radius: 10px 10px 0 0; cursor: grab; touch-action: none; user-select: none;
+  background: var(--hd); color: var(--hi);
+}
+.box-head:active { cursor: grabbing; }
+.box-head .nm { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.box-head .he { font-family: var(--font); font-size: 12px; white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.rows { list-style: none; margin: 0; padding: 0 0 8px; }
+.rows li { height: 24px; display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 6px; padding: 0 12px 0 8px; }
+.rows li:nth-child(even) { background: color-mix(in srgb, var(--canvas) 55%, transparent); }
+.rows li .k { display: flex; gap: 2px; }
+.rows li .c { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rows li .t { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.rows li.pk .c { font-weight: 600; }
+.rows li.fk .c { color: var(--fk); }
+.rows li.added .c::after { content: " +"; color: var(--new); font-weight: 700; }
+.rows li.hot { background: color-mix(in srgb, var(--hot) 16%, transparent); }
+
+.d-people  { --hd: var(--d-people);  --hi: var(--d-people-ink); }
+.d-catalog { --hd: var(--d-catalog); --hi: var(--d-catalog-ink); }
+.d-ops     { --hd: var(--d-ops);     --hi: var(--d-ops-ink); }
+.d-orders  { --hd: var(--d-orders);  --hi: var(--d-orders-ink); }
+.d-ai      { --hd: var(--d-ai);      --hi: var(--d-ai-ink); }
+.swatch { width: 12px; height: 12px; border-radius: 3px; background: var(--hd); box-shadow: inset 0 0 0 1px var(--hi); }
+
+.foot { max-width: 1400px; margin: 0 auto; padding-block: 0 40px; display: grid; gap: 6px; color: var(--muted); font-size: 0.88rem; }
+.foot p { margin: 0; }
+
+@media (prefers-reduced-motion: reduce) { .link, .box { transition: none; } }
+</style>
+</head>
+<body>
+
+<div dir="rtl">
+  <div class="gutter">
+    <div class="top">
+      <h1>תרשים ER של yumm.ai</h1>
+      <p class="lead">20 הטבלאות המוצעות לגרסת SQLite. כל קו יוצא מעמודת המפתח הזר ונכנס למפתח הראשי בטבלה שאליה הוא מצביע. לחצו על כותרת של טבלה כדי לבודד את הקשרים שלה, או גררו אותה כדי לסדר מחדש. מעבר עם העכבר על עמודה מסמן את הקשר שלה.</p>
+      <div class="bar">
+        <div class="legend">
+          <span><span class="badge b-pk">PK</span> מפתח ראשי</span>
+          <span><span class="badge b-fk">FK</span> מפתח זר</span>
+          <span><svg width="34" height="14" aria-hidden="true"><path class="mark" d="M2 7H32M2 1L14 7L2 13" /></svg> צד "רבים"</span>
+          <span><svg width="34" height="14" aria-hidden="true"><path class="mark" d="M2 7H32M22 1V13M27 1V13" /></svg> צד "אחד"</span>
+          <span><span class="badge b-new">חדש</span> טבלה מוצעת</span>
+          <span><code style="color:var(--new);font-weight:700">+</code> עמודה שנוספה</span>
+        </div>
+        <div class="tools" role="toolbar" aria-label="תצוגה">
+          <button type="button" id="zoomOut" aria-label="הקטנה">−</button>
+          <span class="zoom-val" id="zoomVal">100%</span>
+          <button type="button" id="zoomIn" aria-label="הגדלה">+</button>
+          <button type="button" id="fit">התאמה למסך</button>
+          <button type="button" id="reset">סידור מקורי</button>
+        </div>
+      </div>
+      <div class="legend" id="domainLegend"></div>
+      <div class="status" id="status" aria-live="polite">לחצו על טבלה כדי לראות רק את הקשרים שלה.</div>
+    </div>
+  </div>
+
+  <div class="gutter viewport-wrap">
+    <div class="viewport" id="viewport">
+      <div class="sizer" id="sizer">
+        <div class="stage" id="stage">
+          <svg class="links" id="links" aria-hidden="true"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gutter">
+    <div class="foot">
+      <p>מפתחות זרים מורכבים: <code>orders(event_id, customer_id)</code> מצביע על <code>events(id, customer_id)</code>, ו-<code>ai_change_proposals(conversation_id, order_id)</code> מצביע על <code>ai_conversations(id, order_id)</code>. בתרשים כל אחד מהם מופיע כקווים נפרדים.</p>
+      <p>ב-SQLite צריך להפעיל <code>PRAGMA foreign_keys = ON</code> בכל חיבור, אחרת אף אחד מהקשרים האלה לא נאכף.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const W = 280, HEAD = 40, ROW = 24, PAD = 8;
+const COLX = [40, 430, 820, 1210, 1600, 1990];
+
+const DOMAINS = { people: "אנשים ואירועים", catalog: "קטלוג המנות", ops: "תפעול העסק", orders: "הזמנות", ai: "העוזר החכם" };
+
+// cols: [name, type, flags]  flags: "pk" | {pk, fk, one, side, add}
+const TABLES = [
+  { n: "event_types", he: "סוגי אירועים", d: "people", isNew: true, c: 0, y: 40, cols: [
+    ["id","INTEGER","pk"],["name","TEXT UNIQUE"],["image_path","TEXT"],["sort_order","INTEGER"],["is_active","INTEGER"]] },
+  { n: "blocked_dates", he: "תאריכים סגורים", d: "ops", c: 0, y: 660, cols: [
+    ["id","TEXT","pk"],["date","TEXT UNIQUE"],["reason","TEXT"]] },
+  { n: "business_settings", he: "הגדרות העסק", d: "ops", isNew: true, c: 0, y: 830, cols: [
+    ["id","INTEGER","pk"],["currency","TEXT"],["min_order_agorot","INTEGER"],["lead_days","INTEGER"],["contact_phone","TEXT"]] },
+
+  { n: "customers", he: "לקוחות", d: "people", c: 1, y: 40, cols: [
+    ["id","TEXT","pk"],["full_name","TEXT"],["email","TEXT"],["phone","TEXT"],["created_at","TEXT"],["updated_at","TEXT"]] },
+  { n: "events", he: "אירועים", d: "people", c: 1, y: 290, cols: [
+    ["id","TEXT","pk"],["customer_id","TEXT",{fk:"customers",side:"left"}],["event_type_id","INTEGER",{fk:"event_types",add:true}],
+    ["event_date","TEXT"],["adults","INTEGER"],["children","INTEGER"],["vegetarian_guests","INTEGER"],["vegan_guests","INTEGER"],
+    ["restricted_guests","INTEGER"],["dietary_notes","TEXT"]] },
+  { n: "time_slots", he: "חלונות זמן", d: "ops", c: 1, y: 640, cols: [
+    ["id","TEXT","pk"],["fulfillment_type","TEXT"],["weekday","INTEGER"],["start_time","TEXT"],["end_time","TEXT"],["capacity","INTEGER"],["is_active","INTEGER"]] },
+  { n: "delivery_zones", he: "אזורי משלוח", d: "ops", c: 1, y: 910, cols: [
+    ["id","TEXT","pk"],["name","TEXT"],["fee_agorot","INTEGER"],["definition","TEXT JSON"],["is_active","INTEGER"]] },
+
+  { n: "orders", he: "הזמנות", d: "orders", c: 2, y: 40, cols: [
+    ["id","TEXT","pk"],["event_id","TEXT UNIQUE",{fk:"events",one:true}],["customer_id","TEXT",{fk:"customers"}],
+    ["time_slot_id","TEXT",{fk:"time_slots",add:true}],["delivery_zone_id","TEXT",{fk:"delivery_zones"}],["decided_by","TEXT",{fk:"admin_users",add:true}],
+    ["status","TEXT CHECK"],["version","INTEGER"],["fulfillment_type","TEXT"],["requested_at","TEXT"],["delivery_address","TEXT"],
+    ["subtotal_agorot","INTEGER"],["delivery_fee_agorot","INTEGER"],["total_agorot","INTEGER"],["submitted_at","TEXT"],["decided_at","TEXT"],["decision_note","TEXT"]] },
+  { n: "order_status_history", he: "היסטוריית סטטוסים", d: "orders", isNew: true, c: 2, y: 560, cols: [
+    ["id","TEXT","pk"],["order_id","TEXT",{fk:"orders",side:"left"}],["changed_by","TEXT",{fk:"admin_users"}],
+    ["from_status","TEXT"],["to_status","TEXT"],["note","TEXT"],["changed_at","TEXT"]] },
+  { n: "ai_conversations", he: "שיחות", d: "ai", c: 2, y: 840, cols: [
+    ["id","TEXT","pk"],["order_id","TEXT",{fk:"orders",side:"left"}],["created_at","TEXT"]] },
+
+  { n: "order_items", he: "שורות הזמנה", d: "orders", c: 3, y: 40, cols: [
+    ["id","TEXT","pk"],["order_id","TEXT",{fk:"orders"}],["dish_id","TEXT",{fk:"dishes"}],["quantity","REAL"],
+    ["snapshot_name","TEXT"],["snapshot_pricing_unit","TEXT"],["snapshot_unit_price_agorot","INTEGER"],["snapshot_line_total_agorot","INTEGER"]] },
+  { n: "ai_change_proposals", he: "הצעות שינוי", d: "ai", c: 3, y: 340, cols: [
+    ["id","TEXT","pk"],["order_id","TEXT",{fk:"orders"}],["conversation_id","TEXT",{fk:"ai_conversations"}],
+    ["base_order_version","INTEGER"],["changes","TEXT JSON"],["price_before_agorot","INTEGER"],["price_after_agorot","INTEGER"],
+    ["status","TEXT CHECK"],["created_at","TEXT"],["decided_at","TEXT"],["executed_at","TEXT"]] },
+  { n: "admin_users", he: "בעלי העסק", d: "people", isNew: true, c: 3, y: 710, cols: [
+    ["id","TEXT","pk"],["email","TEXT UNIQUE"],["password_hash","TEXT"],["full_name","TEXT"],["role","TEXT CHECK"],["created_at","TEXT"]] },
+  { n: "ai_messages", he: "הודעות", d: "ai", c: 3, y: 960, cols: [
+    ["id","TEXT","pk"],["conversation_id","TEXT",{fk:"ai_conversations"}],["role","TEXT CHECK"],["content","TEXT JSON"],["created_at","TEXT"]] },
+
+  { n: "dishes", he: "מנות", d: "catalog", c: 4, y: 40, cols: [
+    ["id","TEXT","pk"],["category_id","TEXT",{fk:"dish_categories"}],["name","TEXT"],["description","TEXT"],["image_path","TEXT"],
+    ["pricing_unit","TEXT CHECK"],["unit_price_agorot","INTEGER"],["unit_label","TEXT"],["min_quantity","REAL"],["is_available","INTEGER"]] },
+  { n: "dish_dietary", he: "תזונה וכשרות", d: "catalog", c: 4, y: 390, cols: [
+    ["dish_id","TEXT",{pk:true,fk:"dishes",one:true,side:"left"}],["kashrut_class","TEXT NULL"],["is_vegetarian","INTEGER NULL"],["is_vegan","INTEGER NULL"],["verified_at","TEXT"]] },
+  { n: "dish_allergens", he: "אלרגנים במנה", d: "catalog", c: 4, y: 620, cols: [
+    ["dish_id","TEXT",{pk:true,fk:"dishes",side:"left"}],["allergen_id","INTEGER",{pk:true,fk:"allergens"}],["status","TEXT CHECK"]] },
+
+  { n: "dish_categories", he: "קטגוריות", d: "catalog", c: 5, y: 40, cols: [
+    ["id","TEXT","pk"],["name","TEXT UNIQUE"],["sort_order","INTEGER"],["is_active","INTEGER"]] },
+  { n: "quantity_rules", he: "כללי כמויות", d: "catalog", isNew: true, c: 5, y: 250, cols: [
+    ["id","TEXT","pk"],["category_id","TEXT",{fk:"dish_categories",side:"right"}],["dish_id","TEXT",{fk:"dishes"}],
+    ["guests_per_unit","REAL"],["child_factor","REAL"],["rounding","TEXT CHECK"]] },
+  { n: "allergens", he: "אלרגנים", d: "catalog", c: 5, y: 520, cols: [
+    ["id","INTEGER","pk"],["name","TEXT UNIQUE"]] },
+];
+
+const flags = c => (typeof c[2] === "string") ? { pk: c[2] === "pk" } : (c[2] || {});
+const T = {};
+TABLES.forEach(t => { t.x0 = COLX[t.c]; t.y0 = t.y; t.x = t.x0; T[t.n] = t; });
+
+const LINKS = [];
+TABLES.forEach(t => t.cols.forEach(c => {
+  const f = flags(c);
+  if (f.fk) LINKS.push({ id: `${t.n}.${c[0]}`, from: t.n, col: c[0], to: f.fk, toCol: "id", one: !!f.one, side: f.side || "left" });
+}));
+
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[ch]));
+const stage = document.getElementById("stage"), svg = document.getElementById("links");
+const sizer = document.getElementById("sizer"), viewport = document.getElementById("viewport");
+
+// Boxes
+TABLES.forEach(t => {
+  const el = document.createElement("div");
+  el.className = `box d-${t.d}${t.isNew ? " is-new" : ""}`;
+  el.dataset.t = t.n;
+  el.innerHTML = `<div class="box-head" tabindex="0" role="button" aria-label="${esc(t.n)} ${esc(t.he)}">
+      <span class="nm">${esc(t.n)}</span>
+      <span class="he" dir="rtl">${t.isNew ? '<span class="badge b-new">חדש</span>' : ""}${esc(t.he)}</span>
+    </div>
+    <ul class="rows">${t.cols.map(c => {
+      const f = flags(c);
+      const cls = [f.pk ? "pk" : "", f.fk ? "fk" : "", f.add ? "added" : ""].join(" ");
+      const k = (f.pk ? '<span class="badge b-pk">PK</span>' : "") + (f.fk && !f.pk ? '<span class="badge b-fk">FK</span>' : "") + (f.fk && f.pk ? '<span class="badge b-fk">FK</span>' : "");
+      return `<li class="${cls}" data-col="${esc(c[0])}" title="${esc(t.n + "." + c[0])}${f.fk ? " → " + esc(f.fk) + ".id" : ""}"><span class="k">${k}</span><span class="c">${esc(c[0])}</span><span class="t">${esc(c[1])}</span></li>`;
+    }).join("")}</ul>`;
+  t.el = el;
+  t.h = HEAD + t.cols.length * ROW + PAD;
+  stage.appendChild(el);
+});
+
+const rowY = (t, col) => t.y + HEAD + t.cols.findIndex(c => c[0] === col) * ROW + ROW / 2;
+
+function linkGeom(l) {
+  const A = T[l.from], B = T[l.to];
+  const ay = rowY(A, l.col), by = rowY(B, l.toCol);
+  let ax, bx, o, e, d;
+  const sameCol = Math.abs(A.x - B.x) < W;
+  if (sameCol) {
+    const s = l.side === "right" ? 1 : -1;
+    ax = s > 0 ? A.x + W : A.x; bx = s > 0 ? B.x + W : B.x;
+    const L = 34 + Math.abs(ay - by) * 0.07;
+    d = `M${ax} ${ay} C${ax + s * L} ${ay}, ${bx + s * L} ${by}, ${bx} ${by}`;
+    o = s; e = -s;
+  } else {
+    const dir = B.x > A.x ? 1 : -1;
+    ax = dir > 0 ? A.x + W : A.x; bx = dir > 0 ? B.x : B.x + W;
+    const k = Math.max(36, Math.abs(bx - ax) / 2);
+    d = `M${ax} ${ay} C${ax + dir * k} ${ay}, ${bx - dir * k} ${by}, ${bx} ${by}`;
+    o = dir; e = dir;
+  }
+  // FK end: crow's foot (many) or single bar (one). PK end: double bar (exactly one).
+  const fkMark = l.one
+    ? `M${ax + o * 9} ${ay - 6}V${ay + 6}`
+    : `M${ax + o * 13} ${ay}L${ax} ${ay - 7}M${ax + o * 13} ${ay}L${ax} ${ay + 7}`;
+  const pkMark = `M${bx - e * 8} ${by - 6}V${by + 6}M${bx - e * 13} ${by - 6}V${by + 6}`;
+  return { d, m: fkMark + pkMark };
+}
+
+let canvasW = 0, canvasH = 0, scale = 1;
+function layout() {
+  canvasW = Math.max(...TABLES.map(t => t.x + W)) + 60;
+  canvasH = Math.max(...TABLES.map(t => t.y + t.h)) + 60;
+  TABLES.forEach(t => { t.el.style.left = t.x + "px"; t.el.style.top = t.y + "px"; });
+  svg.setAttribute("width", canvasW); svg.setAttribute("height", canvasH);
+  svg.setAttribute("viewBox", `0 0 ${canvasW} ${canvasH}`);
+  stage.style.width = canvasW + "px"; stage.style.height = canvasH + "px";
+  svg.innerHTML = LINKS.map(l => {
+    const g = linkGeom(l);
+    return `<g class="lg${hotLinks.has(l.id) ? " hot" : ""}" data-id="${l.id}"><path class="link" d="${g.d}"/><path class="mark" d="${g.m}"/></g>`;
+  }).join("");
+  applyScale();
+}
+
+function applyScale() {
+  stage.style.transform = `scale(${scale})`;
+  sizer.style.width = canvasW * scale + "px";
+  sizer.style.height = canvasH * scale + "px";
+  document.getElementById("zoomVal").textContent = Math.round(scale * 100) + "%";
+}
+function setScale(s, keepCenter = true) {
+  const old = scale;
+  s = Math.min(1.6, Math.max(0.15, s));
+  const cx = viewport.scrollLeft + viewport.clientWidth / 2, cy = viewport.scrollTop + viewport.clientHeight / 2;
+  scale = s; applyScale();
+  if (keepCenter) {
+    viewport.scrollLeft = cx / old * s - viewport.clientWidth / 2;
+    viewport.scrollTop = cy / old * s - viewport.clientHeight / 2;
+  }
+}
+const fitScale = () => (viewport.clientWidth - 8) / canvasW;
+
+// Selection and highlighting
+let selected = null, hotLinks = new Set();
+const status = document.getElementById("status");
+function paint() {
+  document.querySelectorAll(".lg").forEach(g => g.classList.toggle("hot", hotLinks.has(g.dataset.id)));
+}
+function select(name) {
+  selected = selected === name ? null : name;
+  const rel = new Set();
+  hotLinks = new Set();
+  if (selected) LINKS.forEach(l => {
+    if (l.from === selected) { hotLinks.add(l.id); rel.add(l.to); }
+    if (l.to === selected) { hotLinks.add(l.id); rel.add(l.from); }
+  });
+  rel.delete(selected);
+  stage.classList.toggle("dim", !!selected);
+  TABLES.forEach(t => {
+    t.el.classList.toggle("sel", t.n === selected);
+    t.el.classList.toggle("rel", rel.has(t.n));
+  });
+  paint();
+  if (!selected) { status.textContent = "לחצו על טבלה כדי לראות רק את הקשרים שלה."; return; }
+  const out = LINKS.filter(l => l.from === selected).map(l => `${l.col} → ${l.to}`);
+  const inc = LINKS.filter(l => l.to === selected).map(l => `${l.from}.${l.col}`);
+  status.innerHTML = `<b>${selected}</b> · יוצאים: ${out.length ? `<code>${out.join(", ")}</code>` : "אין"} · נכנסים: ${inc.length ? `<code>${inc.join(", ")}</code>` : "אין"}`;
+}
+
+// Row hover: highlight the link and its target row
+let hoverRows = [];
+stage.addEventListener("pointerover", e => {
+  const li = e.target.closest(".rows li"); if (!li) return;
+  const t = li.closest(".box").dataset.t, col = li.dataset.col;
+  const ls = LINKS.filter(l => (l.from === t && l.col === col) || (l.to === t && l.toCol === col));
+  if (!ls.length) return;
+  hoverRows.forEach(r => r.classList.remove("hot"));
+  hoverRows = [li];
+  ls.forEach(l => {
+    const other = l.from === t ? T[l.to].el.querySelector(`li[data-col="${l.toCol}"]`) : T[l.from].el.querySelector(`li[data-col="${l.col}"]`);
+    if (other) hoverRows.push(other);
+    svg.querySelector(`[data-id="${CSS.escape(l.id)}"]`)?.classList.add("hot");
+  });
+  hoverRows.forEach(r => r.classList.add("hot"));
+});
+stage.addEventListener("pointerout", e => {
+  const li = e.target.closest(".rows li"); if (!li || li.contains(e.relatedTarget)) return;
+  hoverRows.forEach(r => r.classList.remove("hot")); hoverRows = [];
+  paint();
+});
+
+// Drag by header; a click without movement selects
+stage.addEventListener("pointerdown", e => {
+  const head = e.target.closest(".box-head"); if (!head) return;
+  const t = T[head.parentElement.dataset.t];
+  const st = { x: e.clientX, y: e.clientY, tx: t.x, ty: t.y, moved: false };
+  head.setPointerCapture(e.pointerId);
+  const move = ev => {
+    const dx = (ev.clientX - st.x) / scale, dy = (ev.clientY - st.y) / scale;
+    if (!st.moved && Math.hypot(dx, dy) < 4) return;
+    st.moved = true;
+    t.x = Math.max(0, Math.round(st.tx + dx)); t.y = Math.max(0, Math.round(st.ty + dy));
+    layout();
+  };
+  const up = () => {
+    head.removeEventListener("pointermove", move); head.removeEventListener("pointerup", up); head.removeEventListener("pointercancel", up);
+    if (!st.moved) select(t.n);
+  };
+  head.addEventListener("pointermove", move); head.addEventListener("pointerup", up); head.addEventListener("pointercancel", up);
+});
+stage.addEventListener("keydown", e => {
+  const head = e.target.closest(".box-head");
+  if (head && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); select(head.parentElement.dataset.t); }
+});
+
+document.getElementById("zoomIn").onclick = () => setScale(scale * 1.2);
+document.getElementById("zoomOut").onclick = () => setScale(scale / 1.2);
+document.getElementById("fit").onclick = () => { setScale(fitScale(), false); viewport.scrollTo(0, 0); };
+document.getElementById("reset").onclick = () => {
+  TABLES.forEach(t => { t.x = t.x0; t.y = t.y0; });
+  layout();
+};
+
+document.getElementById("domainLegend").innerHTML = Object.entries(DOMAINS)
+  .map(([k, v]) => `<span class="d-${k}"><span class="swatch"></span>${v}</span>`).join("");
+
+layout();
+scale = Math.min(1, Math.max(0.5, fitScale()));
+applyScale();
+</script>
+</body>
+</html>
